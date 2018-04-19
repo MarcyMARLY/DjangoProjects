@@ -1,9 +1,48 @@
 from django.shortcuts import get_object_or_404,render
-from django.http import HttpResponse,HttpResponseRedirect
+from django.http import HttpResponse,HttpResponseRedirect, JsonResponse
+from rest_framework.parsers import JSONParser
+from django.views.decorators.csrf import csrf_exempt
 from django.template import loader
 from django.http import Http404
 from .models import Person
 from django.urls import reverse
+from .serializers import PersonSerializer2
+
+
+@csrf_exempt
+def person_list(request):
+  if request.method == "GET":
+    persons = Person.objects.all()
+    ser = PersonSerializer2(persons, many=True)
+    return JsonResponse(ser.data, safe=False)
+  elif request.method == "POST":
+    data = JSONParser().parse(request)
+    ser = PersonSerializer2(data=data)
+    if ser.is_valid():
+      ser.save()
+      return JsonResponse(ser.data, status=201)
+    return JsonResponse(ser.errors, status=400)
+@csrf_exempt
+def person_detail(request, person_id):
+
+  try:
+    person = Person.objects.get(pk=person_id)
+  except Exception as e:
+    return JsonResponse({"error": str(e)}, status=404)
+
+  if request.method == "GET":
+    ser = PersonSerializer2(person)
+    return JsonResponse(ser.data)
+  elif request.method == "PUT":
+    data = JSONParser().parse(request)
+    ser = PersonSerializer2(person, data)
+    if ser.is_valid():
+      ser.save()
+      return JsonResponse(ser.data)
+  elif request.method == "DELETE":
+    person.delete()
+    ser = PersonSerializer2(person)
+    return JsonResponse(ser.data)
 
 
 def index(request):

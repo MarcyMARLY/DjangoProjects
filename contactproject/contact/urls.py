@@ -10,5 +10,7 @@ urlpatterns = [
     path('<int:person_id>/edit/',views.edit,name ='edit'),
     path('<int:person_id>/save/',views.save,name = 'save'),
     path('<int:person_id>/delete/',views.delete,name = 'delete'),
+    path('persons/', views.person_list),
+    path('persons/<int:person_id>/', views.person_detail)
 
 ]
